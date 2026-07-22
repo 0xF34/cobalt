@@ -3,7 +3,7 @@ services:
     name: cobalt-api
     env: node
     plan: starter
-    buildCommand: pnpm install --frozen-lockfile
+    buildCommand: pnpm install --frozen-lockfile --ignore-scripts
     startCommand: pnpm --filter @imput/cobalt-api start
     envVars:
       - key: NODE_ENV
