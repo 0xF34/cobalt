@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "buildCommand": "pnpm install --frozen-lockfile && pnpm --filter @imput/cobalt-web build",
+  "outputDirectory": "web/build",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "env": {
+    "WEB_DEFAULT_API": "https://YOUR_API_DOMAIN"
+  }
+}

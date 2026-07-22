@@ -12,12 +12,55 @@ const enabledServices = new Set(Object.keys(services).filter(e => {
     }
 }));
 
-const env = {
-    apiURL: process.env.API_URL || '',
-    apiPort: process.env.API_PORT || 9000,
-    tunnelPort: process.env.API_PORT || 9000,
+const normalizeURL = (value) => {
+    if (!value) {
+        return '';
+    }
 
-    listenAddress: process.env.API_LISTEN_ADDRESS,
+    const trimmed = value.trim();
+    if (!trimmed) {
+        return '';
+    }
+
+    if (/^https?:\/\//i.test(trimmed)) {
+        return trimmed.replace(/\/+$/, '');
+    }
+
+    return `https://${trimmed.replace(/\/+$/, '')}`;
+};
+
+export const resolveApiURL = (env = process.env) => {
+    const explicitURL = normalizeURL(env.API_URL);
+    if (explicitURL) {
+        return explicitURL;
+    }
+
+    const renderURL = normalizeURL(env.RENDER_EXTERNAL_URL);
+    if (renderURL) {
+        return renderURL;
+    }
+
+    const vercelURL = normalizeURL(env.VERCEL_URL);
+    if (vercelURL) {
+        return vercelURL;
+    }
+
+    const port = env.PORT || env.API_PORT;
+    if (port) {
+        return `http://127.0.0.1:${port}`;
+    }
+
+    return 'http://127.0.0.1:9000';
+};
+
+const apiPort = process.env.PORT || process.env.API_PORT || 9000;
+
+const env = {
+    apiURL: resolveApiURL(),
+    apiPort,
+    tunnelPort: apiPort,
+
+    listenAddress: process.env.API_LISTEN_ADDRESS || '0.0.0.0',
     freebindCIDR: process.platform === 'linux' && process.env.FREEBIND_CIDR,
 
     corsWildcard: process.env.CORS_WILDCARD !== '0',
