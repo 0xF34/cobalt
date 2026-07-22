@@ -1,26 +1,24 @@
-FROM node:23-alpine AS base
+FROM node:22-alpine
+
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ENV NODE_ENV=production
 
-FROM base AS build
-WORKDIR /app
-COPY . /app
-
-RUN corepack enable
-RUN apk add --no-cache python3 alpine-sdk
-
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --prod --frozen-lockfile
-
-RUN pnpm deploy --filter=@imput/cobalt-api --prod /prod/api
-
-FROM base AS api
 WORKDIR /app
 
-COPY --from=build --chown=node:node /prod/api /app
-COPY --from=build --chown=node:node /app/.git /app/.git
+RUN corepack enable \
+    && apk add --no-cache python3 make g++ git
 
-USER node
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY api/package.json ./api/package.json
+COPY web/package.json ./web/package.json
+COPY packages/version-info/package.json ./packages/version-info/package.json
 
+RUN pnpm install --prod --frozen-lockfile
+
+COPY api ./api
+COPY packages/version-info ./packages/version-info
+
+WORKDIR /app/api
 EXPOSE 9000
-CMD [ "node", "src/cobalt" ]
+CMD ["node", "src/cobalt"]
